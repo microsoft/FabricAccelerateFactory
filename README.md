@@ -4,7 +4,7 @@ A comprehensive framework and toolkit designed to guide organizations through su
 
 This repository is brought to you by a Microsoft Internal BI Team and will continue to grow as we develop new tools and accelerators.
 
-These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/Fabric-Migration-Factory/issues) tab of this repository and we will work to address issues on a best effort basis.
+These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-migrationfactory/issues) tab of this repository and we will work to address issues on a best effort basis.
 
 ## Migration Templates
 - [Migration Patterns](./MigrationPatterns/Templates) - Templates for common migration scenarios
