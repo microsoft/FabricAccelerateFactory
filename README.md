@@ -1,7 +1,7 @@
 # Welcome to the Fabric Migration Factory
 
 [![Release](https://img.shields.io/badge/release-v1.0.0-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/releases)
-[![Security](https://img.shields.io/badge/security-GitHub%20native-brightgreen?style=flat-square&logo=shield)](https://github.com/microsoft/fabric-migrationfactory/security)
+[![Security Policy](https://img.shields.io/badge/security-policy-blue?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory/blob/main/SECURITY.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory/blob/main/LICENSE)
 [![Issues](https://img.shields.io/badge/issues-welcome-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/issues)
 [![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory)
