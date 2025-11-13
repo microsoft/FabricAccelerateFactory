@@ -12,13 +12,13 @@ This repository is brought to you by a Microsoft Internal BI Team and will conti
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-migrationfactory/issues) tab of this repository and we will work to address issues on a best effort basis.
 
 ## Migration Templates
-- [Migration Patterns](./MigrationPatterns/Templates) - Templates for common migration scenarios
+- [Migration Patterns](./MigrationPatterns/) - Templates for common migration scenarios
 
 ## Supporting Tools
-- [ADB to Synapse or Fabric Notebook Converter](./MigrationTools/CodeTranslator/ADBtoSynapse) - Convert Azure Databricks notebooks to Synapse or Fabric format
-- [Semantic Model Translator](./MigrationTools/CodeTranslator/SematicModelTranslator) - Migrate Power BI semantic models (import model to direct lake)
-- [Data Reconciliation](./MigrationTools/DataReconciliation/AzureSQL) - Tools for validating data consistency between Azure SQL and Fabric SQL
-- [Performance Testing Suite](./MigrationTools/PerformaceTest) - Benchmarking tools comparing Fabric SQL vs Azure SQL and Power BI visuals performance
+- [ADB to Synapse or Fabric Notebook Converter](./Tools/CodeTranslator/ADBtoSynapse) - Convert Azure Databricks notebooks to Synapse or Fabric format
+- [Semantic Model Translator](./Tools/CodeTranslator/SematicModelTranslator) - Migrate Power BI semantic models (import model to direct lake)
+- [Data Reconciliation](./Tools/DataReconciliation/AzureSQL) - Tools for validating data consistency between Azure SQL and Fabric SQL
+- [Performance Testing Suite](./Tools/PerformaceTest) - Benchmarking tools comparing Fabric SQL vs Azure SQL and Power BI visuals performance
 
 
 # Contributing
