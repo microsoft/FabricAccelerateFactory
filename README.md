@@ -1,5 +1,10 @@
 # Welcome to the Fabric Migration Factory
 
+[![Release](https://img.shields.io/badge/release-v1.0.0-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory/blob/main/LICENSE)
+[![Issues](https://img.shields.io/badge/issues-welcome-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/issues)
+[![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory)  
+
 A comprehensive framework and toolkit designed to guide organizations through successful migrations from Azure Databricks, Synapse Analytics, and Power BI Import Model to Microsoft Fabric. This repository provides structured methodologies, automation tools, and best practices to ensure smooth transitions while preserving data integrity and business continuity.
 
 This repository is brought to you by a Microsoft Internal BI Team and will continue to grow as we develop new tools and accelerators.
