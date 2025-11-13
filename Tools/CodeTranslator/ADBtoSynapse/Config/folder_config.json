@@ -1,0 +1,5 @@
+{
+	<<ADB Folder Structure>>:<<Synapse Folder Structure>>,
+	"Workspace/CustomNotebooks/Track_A":"CustomNotebooks/Track_A",
+	"Workspace/Shared/" : "CustomNotebooks/Shared/"
+}
