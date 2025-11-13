@@ -1,0 +1,20 @@
+{
+    "name": "DS_SQL_OrchConfig",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_SQL_Azure_Platform_Config",
+            "type": "LinkedServiceReference"
+        },
+        "folder": {
+            "name": "Platform Config"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [],
+        "typeProperties": {
+            "schema": "metadata",
+            "table": "tbl_DatasetFilterControl"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,131 @@
+{
+    "name": "ADB to Synapse Notebook Automation",
+    "properties": {
+        "activities": [
+            {
+                "name": "Set Body",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Get Parameters",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "body",
+                    "value": {
+                        "value": "{\n    \"trackName\":\"@{pipeline().parameters.trackName}\",\n    \"runId\":\"@{pipeline().RunId}\",\n    \"addORedit\":\"@{pipeline().parameters.addORedit}\"\n}",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Run Automation Notebook",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Set Body",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Get Parameters').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Run Automation Runbook",
+                            "type": "ExecutePipeline",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "pipeline": {
+                                    "referenceName": "Automation_runbook_status_check",
+                                    "type": "PipelineReference"
+                                },
+                                "waitOnCompletion": true,
+                                "parameters": {
+                                    "RunbookName": {
+                                        "value": "@item().name",
+                                        "type": "Expression"
+                                    },
+                                    "BodyParameters": {
+                                        "value": "@variables('body')",
+                                        "type": "Expression"
+                                    },
+                                    "WebUrl": {
+                                        "value": "@item().value",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Get Parameters",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": {
+                            "value": "select name,value from metadata.tbl_DataFactoryPipelineParameters where pipelinename = 'ADB to Synapse Notebook Automation'",
+                            "type": "Expression"
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "DS_SQL_OrchConfig",
+                        "type": "DatasetReference"
+                    },
+                    "firstRowOnly": false
+                }
+            }
+        ],
+        "parameters": {
+            "trackName": {
+                "type": "string"
+            },
+            "addORedit": {
+                "type": "string"
+            }
+        },
+        "variables": {
+            "body": {
+                "type": "String"
+            }
+        },
+        "folder": {
+            "name": "Ankit Kumar"
+        },
+        "annotations": [],
+        "lastPublishTime": "2025-07-03T05:48:28Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
