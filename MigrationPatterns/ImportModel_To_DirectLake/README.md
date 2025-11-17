@@ -1,4 +1,4 @@
-# Power BI Import Model to Direct Lake Migration Patterns
+# Power BI Import Model to Direct Lake Migration Pattern
 
 This folder contains comprehensive templates and patterns to guide organizations through successful migrations from **Power BI Import Model to Direct Lake** in Microsoft Fabric. These resources provide structured methodologies, pre-built templates, and best practices to ensure smooth transitions while preserving semantic model integrity and improving performance.
 
@@ -67,24 +67,7 @@ graph LR
 - Maintain clear data lineage documentation and establish monitoring protocols
 - Plan comprehensive user training for any experience changes in Direct Lake
 
-## 🎯 Success Metrics
-
-### Performance Indicators
-- **Query Performance**: Measure average query execution times
-- **Data Freshness**: Validate real-time data availability
-- **User Experience**: Track report loading times and responsiveness
-
-### Operational Metrics
-- **Refresh Elimination**: Document refresh time savings and operational efficiency
-- **Cost Optimization**: Measure storage and compute cost improvements
-- **Reliability**: Track uptime and availability improvements
-
-### Business Value
-- **Decision Speed**: Measure improvement in decision-making timelines
-- **User Adoption**: Track user engagement with real-time capabilities
-- **Data Currency**: Validate business value of always-current data
-
-## 🆘 Support and Troubleshooting
+##  Support and Troubleshooting
 
 ### Getting Help
 - Create an issue in the [Fabric Migration Factory repository](https://github.com/microsoft/fabric-migrationfactory/issues)
