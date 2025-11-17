@@ -11,14 +11,32 @@ This repository is brought to you by a Microsoft Internal BI Team and will conti
 
 These assets should be treated as examples that you can use to create the solutions that are appropriate for your use case. If you have any issues, please use the [issues](https://github.com/microsoft/fabric-migrationfactory/issues) tab of this repository and we will work to address issues on a best effort basis.
 
-## Migration Templates
-- [Migration Patterns](./MigrationPatterns/) - Templates for common migration scenarios
+## 🚀 Migration Scenarios
 
-## Supporting Tools
-- [ADB to Synapse or Fabric Notebook Converter](./Tools/CodeTranslator/ADBtoSynapse) - Convert Azure Databricks notebooks to Synapse or Fabric format
-- [Semantic Model Translator](./Tools/CodeTranslator/SematicModelTranslator) - Migrate Power BI semantic models (import model to direct lake)
-- [Data Reconciliation](./Tools/DataReconciliation/AzureSQL) - Tools for validating data consistency between Azure SQL and Fabric SQL
-- [Performance Testing Suite](./Tools/PerformaceTest) - Benchmarking tools comparing Fabric SQL vs Azure SQL and Power BI visuals performance
+The Fabric Migration Factory supports comprehensive migration scenarios based on this high-level migration architecture:
+
+![High Level Migration Architecture](./.media/HighLevelMigrationArchitecture.png)
+
+*The following migration guides are designed around this architectural framework to ensure consistent, structured approaches to Microsoft Fabric adoption.*
+
+### 1. 📊 **Azure Databricks → Microsoft Fabric**
+Transform your Databricks workloads into Fabric Data Engineering and Data Science experiences.
+
+[**📖 View Complete Migration Guide**](./MigrationPatterns/Databricks_To_MSFabric/README.md)
+
+**🛠️ Leverage Acceleration Tools:**
+- [ADB to Fabric Notebook Converter](./Tools/CodeTranslator/ADBtoSynapse/README.md) - Automated notebook conversion
+- [Data Reconciliation Toolkit](./Tools/DataReconciliation/AzureSQL/README.md) - Validate data consistency
+- [SQL Performance Benchmarking](./Tools/PerformaceTest/AzureSQLvsFabricSQL/README.md) - Compare query performance
+
+### 2. 📈 **Power BI Import Model → Direct Lake**
+Modernize your Power BI semantic models for real-time analytics with Direct Lake connectivity.
+
+[**📖 View Complete Migration Guide**](./MigrationPatterns/ImportModel_To_DirectLake/README.md)
+
+**🛠️ Leverage Acceleration Tools:**
+- [Semantic Model Translator](./Tools/CodeTranslator/SematicModelTranslator/README.md) - Automated model conversion
+- [Power BI Performance Testing](./Tools/PerformaceTest/PowerBIVisuals/README.md) - Compare visual performance
 
 
 # Contributing
