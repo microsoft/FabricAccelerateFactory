@@ -6,7 +6,6 @@ Automation tools to accelerate Microsoft Fabric migration.
 
 | Tool | Purpose | Location |
 |------|---------|----------|
-| **[ADB to Synapse/Fabric Converter](./CodeTranslator/ADBtoSynapse/)** | Convert Databricks notebooks to Synapse/Fabric format | `CodeTranslator/ADBtoSynapse/` |
 | **[Semantic Model Translator](./CodeTranslator/SematicModelTranslator/)** | Migrate Power BI models from Import to Direct Lake | `CodeTranslator/SematicModelTranslator/` |
 | **[Data Reconciliation](./DataReconciliation/AzureSQL/)** | Validate data consistency between Azure SQL and Fabric SQL | `DataReconciliation/AzureSQL/` |
 | **[SQL Performance Testing](./PerformaceTest/AzureSQLvsFabricSQL/)** | Compare Azure SQL vs Fabric SQL query performance | `PerformaceTest/AzureSQLvsFabricSQL/` |
@@ -21,5 +20,5 @@ Automation tools to accelerate Microsoft Fabric migration.
 
 ## Migration Scenarios
 
-**Databricks → Fabric**: Use ADB Converter + Data Reconciliation + SQL Performance Testing  
+**Synapse → Fabric**: Use Data Reconciliation + SQL Performance Testing  
 **Power BI Import → Direct Lake**: Use Semantic Model Translator + Power BI Performance Testing

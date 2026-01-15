@@ -5,7 +5,7 @@
 [![Issues](https://img.shields.io/badge/issues-welcome-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/issues)
 [![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory)  
 
-A comprehensive framework and toolkit designed to guide organizations through successful migrations from Azure Databricks, Synapse Analytics, and Power BI Import Model to Microsoft Fabric. This repository provides structured methodologies, automation tools, and best practices to ensure smooth transitions while preserving data integrity and business continuity.
+A comprehensive framework and toolkit designed to guide organizations through successful migrations from Azure Synapse Analytics and Power BI Import Model to Microsoft Fabric. This repository provides structured methodologies, automation tools, and best practices to ensure smooth transitions while preserving data integrity and business continuity.
 
 This repository is brought to you by a Microsoft Internal BI Team and will continue to grow as we develop new tools and accelerators.
 
@@ -19,13 +19,12 @@ The Fabric Migration Factory supports comprehensive migration scenarios based on
 
 *The following migration guides are designed around this architectural framework to ensure consistent, structured approaches to Microsoft Fabric adoption.*
 
-### 1. 📊 **Azure Databricks → Microsoft Fabric**
-Transform your Databricks workloads into Fabric Data Engineering and Data Science experiences.
+### 1. ⚡ **Azure Synapse Spark → Microsoft Fabric**
+Migrate your Synapse Spark workloads to Fabric Data Engineering with enhanced capabilities.
 
-[**📖 View Complete Migration Guide**](./MigrationPatterns/Databricks_To_MSFabric/README.md)
+[**📖 View Complete Migration Guide**](./MigrationPatterns/Synapse_To_MSFabric/README.md)
 
 **🛠️ Leverage Acceleration Tools:**
-- [ADB to Fabric Notebook Converter](./Tools/CodeTranslator/ADBtoSynapse/README.md) - Automated notebook conversion
 - [Data Reconciliation Toolkit](./Tools/DataReconciliation/AzureSQL/README.md) - Validate data consistency
 - [SQL Performance Benchmarking](./Tools/PerformaceTest/AzureSQLvsFabricSQL/README.md) - Compare query performance
 
