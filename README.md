@@ -1,4 +1,4 @@
-# Welcome to the Fabric Migration Factory
+# Welcome to the Fabric Accelerate Factory
 
 [![Release](https://img.shields.io/badge/release-v1.0.0-blue?style=flat-square&logo=github)](https://github.com/microsoft/fabric-migrationfactory/releases)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/microsoft/fabric-migrationfactory/blob/main/LICENSE)
