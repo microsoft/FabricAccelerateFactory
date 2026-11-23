@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "target_platform": "fabric",
+  "autoloader": {
+    "enabled": true,
+    "schema_mode": "explicit",
+    "remove_checkpoint_resets": false,
+    "schemas": {}
+  },
+  "secret_scopes": {},
+  "parameter_defaults": {},
+  "notebook_mappings": {},
+  "table_mappings": {},
+  "mlflow": {
+    "use_fabric_default_tracking": true,
+    "experiment_mappings": {}
+  },
+  "dlt": {
+    "enabled": true,
+    "target_mappings": {},
+    "source_mappings": {},
+    "replace_existing": false
+  },
+  "task_values": {
+    "enabled": true,
+    "message": "Standalone notebook taskValues.set calls were collected into a JSON exit value. Update downstream taskValues.get references and Fabric pipeline/parent-notebook bindings to consume this JSON; orchestration bindings are not generated."
+  },
+  "description": "Active Azure Databricks source-export to Microsoft Fabric mapping configuration. Loaded on each new converter process. This is not a Synapse conversion profile.",
+  "path_mappings": [],
+  "implementation_notes": {
+    "rules.py": "Compiles line rules and resolves the allowlisted widget_define, widget_get and secret handlers. JSON contains no executable Python.",
+    "paths.py": "Applies enabled path_mappings to quoted Python and SQL literal prefixes before legacy path detection. Supports explicit Tables/ destinations and dbutils_fs-scoped /tmp mappings; preserves f-string expressions.",
+    "autoloader.py": "Guarded Parquet stream conversion with explicit DDL or opt-in POC runtime schema inference and an existing availableNow Delta append sink. Optional removal of exact matched checkpoint/schema resets. Schema/discovery/replay semantics require runtime review.",
+    "fabric_patterns.py": "Handles notebook orchestration, explicit Unity Catalog table mappings, MLflow migration and scoped temporary filesystem paths. Environment-specific targets require developer mappings and runtime validation.",
+    "dlt.py": "Guarded all-or-nothing batch SQL DLT conversion to Spark SQL MLV definitions, static DROP constraints and inlined logical-view CTEs. Streaming and CDC/SCD2 require manual migration.",
+    "converter.py": "Executes cell conversion, parameter-cell creation, safe comment placement, syntax checks, %run path handling, %fs argument handling and manual fallback branches.",
+    "parser.py": "Uses magic-command patterns below. Databricks export header, separator and title parsing remain Python grammar logic.",
+    "model.py": "Uses excluded_rule_ids for scoring. AUTO, REVIEW and MANUAL semantics and the 0.5 review weighting remain Python logic.",
+    "report.py": "Uses setup messages through converter.py. Presentation and aggregate calculations remain Python logic."
+  },
+  "rules": [
+    {
+      "id": "W1",
+      "title": "dbutils.widgets definition -> parameters cell",
+      "pattern": "^(?P<indent>\\s*)dbutils\\.widgets\\.(?:text|dropdown|combobox|multiselect)\\(\\s*(?P<q>['\"])(?P<name>\\w+)(?P=q)\\s*,\\s*(?P<q2>['\"])(?P<default>[^'\"]*)(?P=q2).*\\)\\s*$",
+      "level": "REVIEW",
+      "handler": "widget_define",
+      "message": "Fabric has no widgets. The default became a variable in a parameters cell; values passed by a pipeline arrive as strings and dropdown choices are lost."
+    },
+    {
+      "id": "W2",
+      "title": "dbutils.widgets.get -> parameter variable",
+      "pattern": "dbutils\\.widgets\\.get\\(\\s*(?P<q>['\"])(?P<name>\\w+)(?P=q)\\s*\\)",
+      "level": "REVIEW",
+      "handler": "widget_get",
+      "message": "Replaced by the parameter variable of the same name (string typed). Configure parameter_defaults or supply a Fabric pipeline parameter; an empty fallback is not a resolved dataset selection."
+    },
+    {
+      "id": "W3",
+      "title": "dbutils.widgets remove/removeAll",
+      "pattern": "^(?P<indent>\\s*)dbutils\\.widgets\\.(?:remove|removeAll)\\(.*\\)\\s*$",
+      "level": "AUTO",
+      "replacement": "\\g<indent>pass  # [ADB2FABRIC] widgets are not used in Fabric"
+    },
+    {
+      "id": "W4",
+      "title": "Unsupported dbutils.widgets usage",
+      "pattern": "dbutils\\.widgets\\.\\w+\\(",
+      "level": "MANUAL",
+      "message": "Widget call form not recognised (named arguments, non-literal names or other API). Convert to a parameters-cell variable by hand."
+    },
+    {
+      "id": "W5",
+      "title": "getArgument (legacy widget API)",
+      "pattern": "\\bgetArgument\\(",
+      "level": "MANUAL",
+      "message": "Legacy widget API; use a parameters-cell variable."
+    },
+    {
+      "id": "W6",
+      "title": "CREATE WIDGET (SQL)",
+      "pattern": "\\bCREATE\\s+WIDGET\\b",
+      "level": "MANUAL",
+      "scope": "any",
+      "flags": ["IGNORECASE"],
+      "message": "Databricks SQL widgets do not exist in Fabric. Use a parameters-cell variable."
+    },
+    {
+      "id": "W7",
+      "title": "SQL ${widget} substitution",
+      "pattern": "\\$\\{\\w+\\}",
+      "level": "MANUAL",
+      "scope": "sql",
+      "message": "Databricks SQL widget substitution does not exist in Fabric. Build the statement in Python with a parameter variable and run it with spark.sql."
+    },
+    {
+      "id": "F1",
+      "title": "dbutils.fs -> notebookutils.fs",
+      "pattern": "\\bdbutils\\.fs\\.(ls|cp|mv|rm|mkdirs|head|put|append)\\b",
+      "level": "AUTO",
+      "replacement": "notebookutils.fs.\\1"
+    },
+    {
+      "id": "F2",
+      "title": "dbutils.fs.mount",
+      "pattern": "\\bdbutils\\.fs\\.mount\\(",
+      "level": "REVIEW",
+      "replacement": "notebookutils.fs.mount(",
+      "checklist": ["mount", "dbutils.fs.mount call: confirm source URL, auth and mount point on Fabric"],
+      "message": "Different signature and authentication (use a Key Vault token, not Databricks secrets or service principal conf). Prefer OneLake shortcuts or abfss paths."
+    },
+    {
+      "id": "F3",
+      "title": "dbutils.fs.unmount / mounts",
+      "pattern": "\\bdbutils\\.fs\\.(unmount|mounts)\\(",
+      "level": "REVIEW",
+      "replacement": "notebookutils.fs.\\1(",
+      "message": "Verify behaviour on Fabric."
+    },
+    {
+      "id": "F4",
+      "title": "dbutils.fs.refreshMounts / updateMount",
+      "pattern": "\\bdbutils\\.fs\\.(refreshMounts|updateMount)\\(",
+      "level": "MANUAL",
+      "message": "No equivalent. Re-create the mount or use a shortcut."
+    },
+    {
+      "id": "N1",
+      "title": "dbutils.notebook.run",
+      "pattern": "\\bdbutils\\.notebook\\.run\\(",
+      "level": "REVIEW",
+      "replacement": "notebookutils.notebook.run(",
+      "message": "Fabric runs a notebook item by name. Configure notebook_mappings, check timeout_seconds, arguments, workspace, child lakehouse and exit value."
+    },
+    {
+      "id": "N2",
+      "title": "dbutils.notebook.exit",
+      "pattern": "\\bdbutils\\.notebook\\.exit\\(",
+      "level": "AUTO",
+      "replacement": "notebookutils.notebook.exit("
+    },
+    {
+      "id": "N3",
+      "title": "dbutils.notebook.entry_point / context",
+      "pattern": "dbutils\\.notebook\\.entry_point|getDbutils\\(\\)|\\.notebook\\(\\)\\.getContext",
+      "level": "MANUAL",
+      "message": "Databricks internal context API (run id, user, cluster tags). Use notebookutils.runtime.context for the Fabric equivalents."
+    },
+    {
+      "id": "S1",
+      "title": "dbutils.secrets.get -> Key Vault getSecret",
+      "pattern": "\\bdbutils\\.secrets\\.get\\(\\s*(?:scope\\s*=\\s*)?(?P<scope>[^,()]+?)\\s*,\\s*(?:key\\s*=\\s*)?(?P<key>[^()]+?)\\s*\\)",
+      "level": "REVIEW",
+      "handler": "secret",
+      "message": "Literal-scope calls convert to Fabric getSecret: Auto with a real configured vault URL, Review with a missing/placeholder URL and explicit setup dependency. Dynamic scopes and unsupported arguments remain Manual. Grant the execution identity access."
+    },
+    {
+      "id": "S2",
+      "title": "dbutils.secrets list APIs",
+      "pattern": "\\bdbutils\\.secrets\\.(list|listScopes|getBytes)\\(",
+      "level": "MANUAL",
+      "message": "No equivalent; manage secrets in Azure Key Vault."
+    },
+    {
+      "id": "L1",
+      "title": "dbutils.library.restartPython",
+      "pattern": "\\bdbutils\\.library\\.restartPython\\(\\)",
+      "level": "REVIEW",
+      "replacement": "notebookutils.session.restartPython()",
+      "message": "Verify on the target runtime; the session restarts and state is lost."
+    },
+    {
+      "id": "L2",
+      "title": "dbutils.library install",
+      "pattern": "\\bdbutils\\.library\\.(install\\w*|installPyPI|list)\\(",
+      "level": "MANUAL",
+      "checklist": ["library", "Notebook installs libraries via dbutils.library: use %pip or a Fabric Environment"],
+      "message": "Use inline %pip or attach a Fabric Environment."
+    },
+    {
+      "id": "J1",
+      "title": "dbutils.jobs.taskValues",
+      "pattern": "\\bdbutils\\.jobs\\.",
+      "level": "MANUAL",
+      "message": "Task values have no equivalent. Return values with notebookutils.notebook.exit and read them from the pipeline activity output."
+    },
+    {
+      "id": "D1",
+      "title": "pyspark.dbutils import",
+      "pattern": "from\\s+pyspark\\.dbutils\\s+import|import\\s+pyspark\\.dbutils",
+      "level": "MANUAL",
+      "message": "notebookutils is preloaded in Fabric notebooks; remove the DBUtils bootstrap."
+    },
+    {
+      "id": "P1",
+      "title": "Legacy DBFS / mount path",
+      "pattern": "['\"](?:dbfs:/|/dbfs/|/mnt/|/FileStore/|/Volumes/)[^'\"]*['\"]|(?<![\\w/:.])(?:dbfs:/|/dbfs/|/mnt/|/FileStore/)\\S+",
+      "level": "MANUAL",
+      "scope": "any",
+      "checklist": ["storage", "DBFS / mount / Volumes paths found: map to OneLake (Files/Tables), shortcuts or abfss URLs"],
+      "message": "DBFS, mounts and Unity Catalog volumes do not exist in Fabric. Re-point to OneLake (abfss://<workspace>@onelake.dfs.fabric.microsoft.com/...), a shortcut, or the lakehouse Files path."
+    },
+    {
+      "id": "P2",
+      "title": "abfss path (retained)",
+      "pattern": "abfss://",
+      "level": "AUTO",
+      "scope": "any",
+      "silent": true,
+      "checklist": ["storage", "abfss:// paths retained: confirm the Fabric identity can read/write the storage account"]
+    },
+    {
+      "id": "T1",
+      "title": "Table access needs a default lakehouse",
+      "pattern": "\\bsaveAsTable\\(|\\bspark\\.table\\(|\\bFROM\\s+\\w+\\.\\w+|(?i:\\bINSERT\\s+INTO\\b|\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?TABLE\\b)",
+      "level": "AUTO",
+      "scope": "any",
+      "silent": true,
+      "checklist": ["lakehouse", "Notebook reads/writes managed tables: attach a default lakehouse (or use schema-qualified OneLake names)"]
+    },
+    {
+      "id": "C1",
+      "title": "spark.databricks optimizeWrite",
+      "pattern": "spark\\.databricks\\.delta\\.optimizeWrite\\.enabled",
+      "level": "REVIEW",
+      "replacement": "spark.microsoft.delta.optimizeWrite.enabled",
+      "message": "Renamed to the Fabric property; verify the property name and default for your Fabric runtime."
+    },
+    {
+      "id": "C2",
+      "title": "Other spark.databricks.* setting",
+      "pattern": "spark\\.databricks\\.",
+      "level": "REVIEW",
+      "message": "Databricks-specific configuration; remove, or map to a Fabric/Spark equivalent (not converted)."
+    },
+    {
+      "id": "X1",
+      "title": "Auto Loader (cloudFiles)",
+      "pattern": "cloudFiles",
+      "level": "MANUAL",
+      "scope": "any",
+      "message": "Configure autoloader.schemas with the actual explicit schema for supported Parquet file-stream migration. Unsupported options require manual migration; discovery/schema evolution/replay behavior needs validation."
+    },
+    {
+      "id": "X2",
+      "title": "COPY INTO",
+      "pattern": "^\\s*COPY\\s+INTO\\b|['\"\\s]COPY\\s+INTO\\s",
+      "level": "MANUAL",
+      "scope": "any",
+      "flags": ["IGNORECASE", "MULTILINE"],
+      "message": "Databricks COPY INTO is not available. Use a Data Factory copy activity or an explicit read/merge."
+    },
+    {
+      "id": "X3",
+      "title": "Delta Live Tables / streaming tables",
+      "pattern": "\\bimport\\s+dlt\\b|\\bfrom\\s+dlt\\b|\\bdlt\\.|\\bCREATE\\s+(?:OR\\s+REFRESH\\s+)?(?:LIVE\\s+TABLE|STREAMING\\s+TABLE|MATERIALIZED\\s+VIEW)\\b",
+      "level": "MANUAL",
+      "scope": "any",
+      "flags": ["IGNORECASE"],
+      "message": "DLT requires semantic migration. Supported batch SQL definitions can become Fabric MLVs with explicit mappings; streaming, CDC/SCD2 and unsupported APIs remain manual."
+    },
+    {
+      "id": "X4",
+      "title": "Unity Catalog statements",
+      "pattern": "\\b(?:USE|CREATE|SHOW|DROP)\\s+CATALOG\\b|\\bcurrent_catalog\\(\\)|\\bhive_metastore\\.|\\bGRANT\\b.+\\bON\\s+(?:CATALOG|SCHEMA|VOLUME)\\b",
+      "level": "MANUAL",
+      "scope": "any",
+      "flags": ["IGNORECASE"],
+      "checklist": ["unity", "Unity Catalog / hive_metastore references: map catalogs and schemas to lakehouses / schemas"],
+      "message": "Three-level Unity Catalog names and grants do not exist in Fabric; map to workspace, lakehouse and schema."
+    },
+    {
+      "id": "X5",
+      "title": "Databricks SDK / Connect / Koalas",
+      "pattern": "^\\s*(?:from|import)\\s+(?:databricks|koalas)\\b",
+      "level": "MANUAL",
+      "flags": ["MULTILINE"],
+      "message": "Databricks-only library. Replace with a Fabric/OSS equivalent (for example pandas-on-Spark: pyspark.pandas)."
+    },
+    {
+      "id": "X6",
+      "title": "Databricks REST/CLI call",
+      "pattern": "\\.cloud\\.databricks\\.net|\\.azuredatabricks\\.net|/api/2\\.\\d/",
+      "level": "MANUAL",
+      "scope": "any",
+      "message": "Calls the Databricks control plane; replace with Fabric REST APIs or remove."
+    },
+    {
+      "id": "M1",
+      "title": "SQL statement with Databricks-only clause",
+      "pattern": "\\bOPTIMIZE\\b.+\\bZORDER\\b|\\bVACUUM\\b|\\bDESCRIBE\\s+HISTORY\\b",
+      "level": "AUTO",
+      "scope": "any",
+      "silent": true,
+      "flags": ["IGNORECASE"],
+      "checklist": ["delta", "OPTIMIZE/ZORDER/VACUUM/HISTORY used: runs on Fabric Delta; verify retention and the lakehouse maintenance policy"]
+    },
+    {
+      "id": "Z9",
+      "title": "Unsupported dbutils API",
+      "pattern": "\\bdbutils\\b",
+      "level": "MANUAL",
+      "scope": "any",
+      "message": "dbutils API with no mapped notebookutils equivalent."
+    }
+  ],
+  "magic_commands": [
+    {"kind": "markdown", "pattern": "^%md(?:-sandbox)?\\b", "id": "MAG-MD", "level": "AUTO", "title": "%md -> markdown cell"},
+    {"kind": "sql", "pattern": "^%sql\\b", "id": "MAG-SQL", "level": "AUTO", "title": "%sql -> %%sql cell"},
+    {"kind": "code", "pattern": "^%python\\b", "id": "MAG-PY", "level": "AUTO", "title": "%python -> PySpark cell"},
+    {"kind": "scala", "pattern": "^%scala\\b", "id": "MAG-SCALA", "level": "REVIEW", "title": "%scala -> %%spark cell"},
+    {"kind": "r", "pattern": "^%r\\b", "id": "MAG-R", "level": "REVIEW", "title": "%r -> %%sparkr cell"},
+    {"kind": "sh", "pattern": "^%sh\\b", "id": "MAG-SH", "level": "REVIEW", "title": "%sh -> shell commands (!cmd)"},
+    {"kind": "run", "pattern": "^%run\\b", "id": "MAG-RUN", "level": "REVIEW", "title": "%run <path> -> %run <notebook name>"},
+    {"kind": "fs", "pattern": "^%fs\\b", "id": "MAG-FS", "level": "REVIEW", "title": "%fs -> notebookutils.fs"},
+    {"kind": "pip", "pattern": "^%pip\\b", "id": "MAG-PIP", "level": "AUTO", "title": "%pip retained"},
+    {"kind": "unknown_magic", "id": "MAG-UNK", "level": "MANUAL", "title": "Unsupported magic command"}
+  ],
+  "manual_cases": {
+    "run_with_parameters": {
+      "id": "MAG-RUNARGS",
+      "level": "MANUAL",
+      "title": "%run with parameters",
+      "message": "Parameters passed to %run are not carried over; convert to notebookutils.notebook.run or set variables first."
+    },
+    "unsupported_fs": {
+      "id": "MAG-FS",
+      "level": "MANUAL",
+      "title": "Unsupported %fs command",
+      "message": ""
+    }
+  },
+  "checklist_text": {
+    "mlflow": "Confirm the Fabric MLflow tracking URI, experiment target, permissions, model artifacts and run lineage before executing migrated tracking code.",
+    "autoloader": "Resolve explicit source schemas and durable checkpoints; validate native-stream discovery/evolution and initial-load/replay behavior. Never reuse ADB checkpoints or unconditionally reset progress.",
+    "parameters": "Configure parameter defaults or supply string values through Fabric pipeline bindings. Empty fallbacks are not a resolved dataset selection.",
+    "dlt": "Validate Fabric MLV availability, source/target mappings, constraints and refresh orchestration. Streaming/CDC/SCD2 require a separate stateful migration; no pipeline schedule is generated.",
+    "task_values": "Update downstream taskValues.get references and orchestration bindings to read and parse this notebook's JSON exit value. This is automatic notebook code conversion, not automatic job migration.",
+    "lakehouse": "Attach a default lakehouse to the notebook (or use fully qualified OneLake names).",
+    "keyvault": "Map each Databricks secret scope to an Azure Key Vault and grant access to the running identity.",
+    "storage": "Re-point DBFS / mount / Volumes paths to OneLake, shortcuts, or abfss URLs; confirm storage permissions.",
+    "mount": "Re-create mounts on Fabric (or replace them with shortcuts).",
+    "library": "Install libraries through a Fabric Environment (inline %pip is session scoped).",
+    "unity": "Map Unity Catalog / hive_metastore names to Fabric workspace, lakehouse and schema.",
+    "delta": "Confirm Delta maintenance (OPTIMIZE / VACUUM) and retention policy for the Fabric lakehouse.",
+    "run": "Make sure every notebook referenced by %run exists in the same Fabric workspace under the converted name."
+  },
+  "cell_metadata": {
+    "code": ["python", "synapse_pyspark"],
+    "sql": ["sparksql", "synapse_pyspark"],
+    "scala": ["scala", "synapse_pyspark"],
+    "r": ["sparkr", "synapse_pyspark"]
+  },
+  "cell_prefixes": {
+    "sql": ["%%sql"],
+    "scala": ["%%spark"],
+    "r": ["%%sparkr"]
+  },
+  "notebook_metadata": {
+    "kernel_info": {"name": "synapse_pyspark"},
+    "kernelspec": {"name": "synapse_pyspark", "display_name": "Synapse PySpark"},
+    "language_info": {"name": "python"},
+    "microsoft": {"language": "python", "language_group": "synapse_pyspark"}
+  },
+  "fs_magic": {
+    "api_prefix": "notebookutils.fs",
+    "commands": ["ls", "cp", "mv", "rm", "mkdirs", "head", "put"],
+    "display_result_commands": ["ls", "head"]
+  },
+  "excluded_rule_ids": ["MAG-MD", "MAG-SQL", "MAG-PY", "MAG-PIP"]
+}
