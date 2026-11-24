@@ -10,3 +10,5 @@ _report/
 *_fabric_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*/
 publish.config.json
 *.ipynb
+/converter/samples/
+/converter/tests/
