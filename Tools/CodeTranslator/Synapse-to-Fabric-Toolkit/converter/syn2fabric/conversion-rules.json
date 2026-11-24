@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "target_platform": "fabric",
+  "description": "Active Azure Synapse Spark notebook to Microsoft Fabric mapping configuration. Loaded when the converter starts; use --config to supply another file. Environment-specific mappings are empty by default.",
+  "key_vaults": {},
+  "linked_services": {},
+  "notebook_mappings": {},
+  "table_mappings": {},
+  "path_mappings": [],
+  "implementation_notes": {
+    "rules.py": "Compiles the regex rules below and resolves the allowlisted handlers (key_vault_secret, key_vault_secret_ls, run_notebook, env_context). JSON contains no executable Python.",
+    "converter.py": "Splits notebooks into cells, resolves cell magics, applies configured path and table mappings, then applies the rules line by line.",
+    "reader.py": "Reads Synapse Studio .ipynb exports and Synapse workspace/Git notebook JSON artifacts."
+  },
+  "magic_commands": [
+    {"kind": "code", "pattern": "^%%pyspark\\b", "id": "MAG-PY", "level": "AUTO", "title": "%%pyspark -> PySpark cell"},
+    {"kind": "sql", "pattern": "^%%sql\\b", "id": "MAG-SQL", "level": "AUTO", "title": "%%sql cell retained"},
+    {"kind": "scala", "pattern": "^%%spark\\b", "id": "MAG-SCALA", "level": "AUTO", "title": "%%spark (Scala) cell retained"},
+    {"kind": "r", "pattern": "^%%sparkr\\b", "id": "MAG-R", "level": "AUTO", "title": "%%sparkr cell retained"},
+    {"kind": "html", "pattern": "^%%html\\b", "id": "MAG-HTML", "level": "AUTO", "title": "%%html cell retained"},
+    {"kind": "passthrough", "pattern": "^%%(?:time|timeit)\\b", "id": "MAG-PASS", "level": "AUTO", "title": "Timing cell magic retained"},
+    {"kind": "csharp", "pattern": "^%%(?:csharp|dotnet)\\b", "id": "MAG-CS", "level": "MANUAL", "title": "%%csharp (.NET for Spark) cell",
+     "message": ".NET for Spark (C#/F#) is not supported in Fabric. Rewrite the cell in PySpark or Scala."},
+    {"kind": "configure", "pattern": "^%%configure\\b", "id": "MAG-CFG", "level": "REVIEW", "title": "%%configure session settings",
+     "message": "Supported session options and defaults differ from Synapse. Verify each setting, or move pool and Spark settings to a Fabric Environment."},
+    {"kind": "unknown", "id": "MAG-UNK", "level": "MANUAL", "title": "Unsupported cell magic",
+     "message": "No Fabric equivalent is known for this cell magic. Migrate the cell manually."}
+  ],
+  "checklist_text": {
+    "keyvault": "Map each Key Vault and linked service to a vault URL and grant the executing identity secret-read access; managed identity for Key Vault is not supported in notebooks.",
+    "linkedservice": "Fabric has no linked services. Replace linked-service authentication with Key Vault secrets, a service principal, or a Fabric connection.",
+    "storage": "Re-point Synapse-managed storage and ADLS Gen2 paths to OneLake, shortcuts or abfss URLs, and confirm storage permissions.",
+    "lakehouse": "Attach a default lakehouse to the notebook (or use fully qualified OneLake names). Lake databases map to lakehouse schemas.",
+    "mount": "Re-create mount points on Fabric or replace them with OneLake shortcuts.",
+    "library": "Install libraries through a Fabric Environment; inline %pip and %conda installs are session scoped.",
+    "run": "Make sure every notebook referenced by %run or notebookutils.notebook.run exists in the Fabric workspace under the converted name.",
+    "pool": "Decide whether a Fabric Starter pool is sufficient or whether the Synapse Spark pool needs a custom pool or Environment (node size, libraries, Spark properties).",
+    "sessionconf": "Synapse session settings are not migrated. Re-create driver and executor sizing and Spark properties in a %%configure cell or a Fabric Environment.",
+    "sqlconnector": "Dedicated SQL pool connector calls need the data in OneLake or a Fabric warehouse; read Delta tables or use the Fabric warehouse connector.",
+    "dotnet": ".NET for Spark (C#/F#) is not supported in Fabric; rewrite those cells in PySpark or Scala."
+  },
+  "cell_metadata": {
+    "code": ["python", "synapse_pyspark"],
+    "sql": ["sparksql", "synapse_pyspark"],
+    "scala": ["scala", "synapse_pyspark"],
+    "r": ["sparkr", "synapse_pyspark"]
+  },
+  "cell_prefixes": {
+    "sql": ["%%sql"],
+    "scala": ["%%spark"],
+    "r": ["%%sparkr"]
+  },
+  "notebook_metadata": {
+    "kernel_info": {"name": "synapse_pyspark"},
+    "kernelspec": {"name": "synapse_pyspark", "display_name": "Synapse PySpark"},
+    "language_info": {"name": "python"},
+    "microsoft": {"language": "python", "language_group": "synapse_pyspark"}
+  },
+  "excluded_rule_ids": ["MAG-PY", "MAG-SQL", "MAG-SCALA", "MAG-R", "MAG-HTML", "MAG-PASS"],
+  "rules": [
+    {
+      "id": "I1",
+      "title": "from notebookutils import mssparkutils -> import notebookutils",
+      "pattern": "^(?P<indent>\\s*)from\\s+notebookutils\\s+import\\s+mssparkutils\\s*$",
+      "level": "AUTO",
+      "replacement": "\\g<indent>import notebookutils"
+    },
+    {
+      "id": "S1",
+      "title": "credentials.getSecret(vault name, secret) -> Key Vault URL",
+      "pattern": "\\b(?:mssparkutils\\.credentials|TokenLibrary)\\.getSecret\\(\\s*(?P<q>[\"'])(?P<vault>[^\"']+)(?P=q)\\s*,\\s*(?P<secret>[^(),]+?)\\s*(?:,\\s*(?P<ls>[^()]+?)\\s*)?\\)",
+      "level": "AUTO",
+      "scope": "any",
+      "handler": "key_vault_secret"
+    },
+    {
+      "id": "S2",
+      "title": "getSecretWithLS(linked service, secret) -> Key Vault URL",
+      "pattern": "\\b(?:mssparkutils\\.credentials|TokenLibrary)\\.getSecretWithLS\\(\\s*(?P<q>[\"'])(?P<ls>[^\"']+)(?P=q)\\s*,\\s*(?P<secret>[^(),]+?)\\s*\\)",
+      "level": "AUTO",
+      "scope": "any",
+      "handler": "key_vault_secret_ls"
+    },
+    {
+      "id": "S3",
+      "title": "Linked-service credential and TokenLibrary helpers",
+      "pattern": "\\b(?:mssparkutils\\.credentials\\.(?:getSecret|getSecretWithLS|putSecretWithLS|getConnectionStringOrCreds|getPropertiesAll|getFullConnectionString)\\b|TokenLibrary\\b)|synapse\\.tokenlibrary",
+      "level": "MANUAL",
+      "scope": "any",
+      "checklist": ["linkedservice", "Linked-service credential helpers or dynamic secret calls remain."],
+      "message": "Not converted automatically (linked services, dynamic or multi-line arguments). Use notebookutils.credentials.getSecret(<Key Vault URL>, <secret name>), or a service principal or Fabric connection."
+    },
+    {
+      "id": "T1",
+      "title": "mssparkutils.credentials.getToken -> notebookutils",
+      "pattern": "\\bmssparkutils\\.credentials\\.getToken\\(",
+      "level": "REVIEW",
+      "scope": "any",
+      "replacement": "notebookutils.credentials.getToken(",
+      "message": "Token audience names can differ in Fabric; verify the audience (for example storage or pbi) and the returned scopes."
+    },
+    {
+      "id": "E1",
+      "title": "mssparkutils.env.* -> runtime context",
+      "pattern": "\\bmssparkutils\\.env\\.(?P<method>getWorkspaceName|getJobId|getClusterId|getPoolName|getUserId|getUserName)\\(\\s*\\)",
+      "level": "REVIEW",
+      "handler": "env_context"
+    },
+    {
+      "id": "E2",
+      "title": "Unsupported mssparkutils.env API",
+      "pattern": "\\bmssparkutils\\.env\\.\\w+",
+      "level": "MANUAL",
+      "scope": "any",
+      "message": "No direct equivalent. Use notebookutils.runtime.context to read workspace, notebook, lakehouse and run information."
+    },
+    {
+      "id": "F1",
+      "title": "mssparkutils.fs -> notebookutils.fs",
+      "pattern": "\\bmssparkutils\\.fs\\.(ls|cp|fastcp|mv|rm|mkdirs|head|put|append|exists)\\b",
+      "level": "AUTO",
+      "scope": "any",
+      "replacement": "notebookutils.fs.\\1"
+    },
+    {
+      "id": "F2",
+      "title": "mssparkutils.fs mount APIs",
+      "pattern": "\\bmssparkutils\\.fs\\.(mount|unmount|mounts|getMountPath)\\b",
+      "level": "REVIEW",
+      "scope": "any",
+      "replacement": "notebookutils.fs.\\1",
+      "checklist": ["mount", "Mount point usage: confirm the source URL, authentication and mount point on Fabric."],
+      "message": "Mount arguments and authentication differ in Fabric (no linked services). Prefer OneLake shortcuts or abfss paths."
+    },
+    {
+      "id": "N1",
+      "title": "mssparkutils.notebook.run",
+      "pattern": "\\bmssparkutils\\.notebook\\.run\\(",
+      "level": "REVIEW",
+      "scope": "any",
+      "replacement": "notebookutils.notebook.run(",
+      "checklist": ["run", "notebook.run call: the referenced notebook must exist in the Fabric workspace."],
+      "message": "Fabric addresses notebooks by name, not by folder path. Verify the notebook name, timeout and arguments."
+    },
+    {
+      "id": "U1",
+      "title": "mssparkutils -> notebookutils",
+      "pattern": "\\bmssparkutils\\b",
+      "level": "AUTO",
+      "scope": "any",
+      "skip_on_manual": true,
+      "replacement": "notebookutils"
+    },
+    {
+      "id": "CAT1",
+      "title": "spark.catalog.listDatabases()",
+      "pattern": "\\bspark\\.catalog\\.listDatabases\\(\\s*\\)",
+      "level": "REVIEW",
+      "replacement": "spark.sql(\"SHOW DATABASES\")",
+      "message": "Fabric does not support this catalog API. The replacement returns a DataFrame instead of a list of Database objects."
+    },
+    {
+      "id": "CAT2",
+      "title": "spark.catalog.currentDatabase()",
+      "pattern": "\\bspark\\.catalog\\.currentDatabase\\(\\s*\\)",
+      "level": "AUTO",
+      "replacement": "spark.sql(\"SELECT CURRENT_DATABASE()\").first()[0]"
+    },
+    {
+      "id": "CAT3",
+      "title": "spark.catalog.getDatabase(name)",
+      "pattern": "\\bspark\\.catalog\\.getDatabase\\(\\s*(?P<arg>[^()]+?)\\s*\\)",
+      "level": "REVIEW",
+      "replacement": "spark.sql(\"DESCRIBE DATABASE \" + str(\\g<arg>))",
+      "message": "Fabric does not support this catalog API. The replacement returns a DataFrame instead of a Database object."
+    },
+    {
+      "id": "CAT4",
+      "title": "spark.catalog.registerFunction -> spark.udf.register",
+      "pattern": "\\bspark\\.catalog\\.registerFunction\\(",
+      "level": "AUTO",
+      "scope": "any",
+      "replacement": "spark.udf.register("
+    },
+    {
+      "id": "CAT5",
+      "title": "Unsupported spark.catalog API",
+      "pattern": "\\bspark\\.catalog\\.(?:listDatabases|currentDatabase|getDatabase|listFunctions|functionExists)\\b",
+      "level": "MANUAL",
+      "scope": "any",
+      "message": "This catalog API is not supported in Fabric. Use Spark SQL (SHOW DATABASES, SELECT CURRENT_DATABASE(), DESCRIBE DATABASE) or remove the call."
+    },
+    {
+      "id": "L1",
+      "title": "Linked-service based configuration",
+      "pattern": "spark\\.synapse\\.linkedService|spark\\.storage\\.synapse\\.linkedServiceName|LinkedServiceBasedTokenProvider|LinkedServiceBasedSAS(?:Provider)?",
+      "level": "MANUAL",
+      "scope": "any",
+      "checklist": ["linkedservice", "Linked-service authentication is used by Spark configuration."],
+      "message": "Linked services do not exist in Fabric. Use direct endpoint authentication, a service principal (ClientCredsTokenProvider) with secrets from Key Vault, or a Fabric connection."
+    },
+    {
+      "id": "Q1",
+      "title": "Synapse dedicated SQL pool connector",
+      "pattern": "\\.synapsesql\\(|\\.sqlanalytics\\(|com\\.microsoft\\.spark\\.sqlanalytics",
+      "level": "MANUAL",
+      "scope": "any",
+      "checklist": ["sqlconnector", "Dedicated SQL pool connector calls remain."],
+      "message": "Replace with Delta reads after the data is available in OneLake, or use the Fabric warehouse connector with three-part names."
+    },
+    {
+      "id": "K1",
+      "title": "Azure Data Explorer (Kusto) Synapse connector",
+      "pattern": "kusto\\.spark\\.synapse",
+      "level": "REVIEW",
+      "scope": "any",
+      "checklist": ["linkedservice", "Kusto connector uses Synapse linked-service authentication."],
+      "message": "Remove the linked-service option and pass an accessToken from notebookutils.credentials.getToken(<cluster URL>)."
+    },
+    {
+      "id": "CO1",
+      "title": "Azure Cosmos DB connector",
+      "pattern": "cosmos\\.oltp",
+      "level": "REVIEW",
+      "scope": "any",
+      "checklist": ["keyvault", "Cosmos DB account key should come from Key Vault."],
+      "message": "Use a direct endpoint and read the account key from Key Vault with notebookutils.credentials.getSecret."
+    },
+    {
+      "id": "P1",
+      "title": "Synapse-managed storage path",
+      "pattern": "/user/trusted-service-user/",
+      "level": "MANUAL",
+      "scope": "any",
+      "checklist": ["storage", "Synapse-managed storage paths remain."],
+      "message": "Replace with a OneLake path (abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<item>/...) or a shortcut path."
+    },
+    {
+      "id": "P2",
+      "title": "External storage path",
+      "pattern": "\\b(?:abfss?|wasbs?|adl)://(?![^\\s\"'/]*@onelake\\.dfs\\.fabric\\.microsoft\\.com)[^\\s\"'`)]+",
+      "level": "REVIEW",
+      "scope": "any",
+      "flags": ["IGNORECASE"],
+      "checklist": ["storage", "External ADLS or Blob storage paths are used."],
+      "message": "Access previously relied on the Synapse workspace identity or a linked service. Create a OneLake shortcut, configure the path in path_mappings, or confirm Fabric authentication to the account."
+    },
+    {
+      "id": "P3",
+      "title": "Synapse mount path (synfs)",
+      "pattern": "\\bsynfs:|/synfs/",
+      "level": "REVIEW",
+      "scope": "any",
+      "checklist": ["mount", "synfs mount paths are used."],
+      "message": "Mount points are not migrated. Re-create the mount in Fabric or use a shortcut."
+    },
+    {
+      "id": "R1",
+      "title": "%run <path> -> %run <notebook name>",
+      "pattern": "^(?P<indent>\\s*)%run\\s+(?P<flags>(?:-\\S+\\s+)*)(?P<target>\"[^\"]+\"|'[^']+'|[^\\s{]+)(?P<rest>.*)$",
+      "level": "AUTO",
+      "handler": "run_notebook"
+    },
+    {
+      "id": "MAG-PIP",
+      "title": "%pip / %conda retained",
+      "pattern": "^\\s*%(?:pip|conda)\\b",
+      "level": "AUTO",
+      "silent": true,
+      "checklist": ["library", "%pip or %conda install is session scoped in Fabric; use an Environment for production."]
+    }
+  ]
+}

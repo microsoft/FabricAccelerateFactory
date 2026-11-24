@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+*.log
+_report/
+*_fabric/
+*_fabric_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*/
+publish.config.json
+*.ipynb
+/converter/samples/synapse_notebooks/
