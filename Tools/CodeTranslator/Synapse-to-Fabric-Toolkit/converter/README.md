@@ -20,13 +20,24 @@ Replace the URL and path with your repository and clone location. If the toolkit
 
 ## Run the converter
 
-**Windows launcher:** Double-click `Convert-Synapse-to-Fabric.bat` and select the input folder, or drag the folder onto the launcher. Check the console for errors and the actual output path. The HTML report opens automatically.
+There are two ways to run the converter. Both produce the same output.
 
-**Command line:** From the `converter` folder:
+### Option 1: Windows launcher (`.bat` file)
+
+1. Double-click `Convert-Synapse-to-Fabric.bat` in the `converter` folder, or drag the input folder onto it.
+2. Select the folder that contains the exported Synapse notebooks.
+3. Check the console for errors and the actual output path. The HTML report opens automatically.
+
+### Option 2: Command line
+
+Open PowerShell, go to the `converter` folder and run the converter with your input folder and an output prefix:
 
 ```powershell
+cd C:\work\toolkit\converter
 python -m syn2fabric "C:\work\synapse-exports" -o "C:\work\converted"
 ```
+
+Replace the paths with your own. If `python` is not available but `py -3 --version` works, use `py -3 -m syn2fabric ...`.
 
 Each run scans the selected folder **recursively** and processes every Synapse notebook found there. To convert only a subset, place that subset in a separate input folder. `-o` is a prefix: the example produces `C:\work\converted_YYYYMMDDHHMM`. Without `-o`, the default is a sibling `<input>_fabric_YYYYMMDDHHMM` folder. Same-minute collisions add `_01`, `_02`, and so on. Every run creates a new folder; existing notebooks and reports are never deleted or overwritten. Use the actual path printed in the console. The output folder must not be inside the input folder.
 
@@ -147,7 +158,7 @@ Handler-based rules use a supported handler for context-aware conversion; the pa
 
 Supported handlers are `key_vault_secret`, `key_vault_secret_ls`, `run_notebook` and `env_context`. More complex transformations belong in the converter package, not in JSON. To add a rule: back up the file, give it a unique `id`, run `python -m syn2fabric <folder> --dry-run`, and review `report.html` and `items.csv`; an over-broad pattern can change unrelated code. Invalid JSON, duplicate IDs, unknown handlers, missing named groups and malformed regexes stop the run with a configuration error.
 
-## Assumptions and troubleshooting
+## Callouts
 
 * Pipelines, Spark job definitions, linked services, datasets, SQL scripts and other artifacts are skipped and listed in the report. Spark pools, libraries and lake database metadata are not migrated; use the Spark Migration Assistant and Fabric Environments for those.
 * `.NET for Spark` (`%%csharp`), dedicated SQL pool connector calls, `TokenLibrary` and linked-service authentication have no Fabric equivalent and are flagged as manual work.

@@ -14,11 +14,20 @@ Never put credentials in the repository or configuration file. Use your organiza
 
 ## Run the publisher
 
-**Windows launcher:** Double-click `Publish-Notebooks.bat`, or drag the actual timestamped converter output folder onto it. Select the destination and follow the prompts. The launcher always previews first and asks for confirmation before publishing.
+There are two ways to run the publisher. Both preview first and write the same logs and reports.
 
-**Command line:** From the `publisher` folder, replace the placeholders:
+### Option 1: Windows launcher (`.bat` file)
+
+1. Double-click `Publish-Notebooks.bat` in the `publisher` folder, or drag the actual timestamped converter output folder onto it.
+2. Choose the destination (Fabric workspace or Azure DevOps repository) and answer the prompts.
+3. The launcher always runs a preview first and asks for confirmation before publishing.
+
+### Option 2: Command line
+
+Open PowerShell, go to the `publisher` folder and run a preview first, replacing the placeholders:
 
 ```powershell
+cd C:\work\toolkit\publisher
 python -m s2f_publish fabric "C:\work\converted_YYYYMMDDHHMM" --workspace-id "<workspace-guid>" --dry-run
 python -m s2f_publish ado "C:\work\converted_YYYYMMDDHHMM" --repo-url "https://dev.azure.com/<org>/<project>/_git/<repo>" --base-branch main --dry-run
 ```

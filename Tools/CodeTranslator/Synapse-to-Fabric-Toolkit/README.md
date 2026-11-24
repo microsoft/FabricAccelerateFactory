@@ -13,9 +13,9 @@ Convert exported Azure Synapse Spark notebooks locally, review the results, and 
 ## Get started
 
 1. Clone or download the repository. Install Python 3.9 or later; the utilities use the Python standard library.
-2. Follow the [converter guide](converter/README.md) to export notebooks, configure mappings and run conversion. Note the output folder printed in the console.
+2. Follow the [converter guide](converter/README.md) to export notebooks, configure mappings and run conversion, using either the `.bat` launcher or the command line. Note the output folder printed in the console.
 3. Open `_report/report.html`, review the findings and validate the notebook behavior and data in Fabric.
-4. Follow the [publisher guide](publisher/README.md) to preview and, when ready, publish the reviewed output.
+4. Follow the [publisher guide](publisher/README.md) to preview and, when ready, publish the reviewed output, again with either the `.bat` launcher or the command line.
 
 The converter works on local or locally synchronized folders and does not require a connection to Synapse. It reads Synapse Studio `.ipynb` exports and Synapse workspace or Git notebook `.json` files; other artifacts such as pipelines, Spark job definitions and linked services are skipped and listed in the report. A report's coverage is a static indicator, not proof of successful execution or equivalent results.
 

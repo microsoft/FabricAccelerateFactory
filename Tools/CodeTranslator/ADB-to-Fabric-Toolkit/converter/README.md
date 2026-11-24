@@ -19,13 +19,24 @@ Replace the URL and path with your repository and clone location. If the toolkit
 
 ## Run the converter
 
-**Windows launcher:** Double-click `Convert-ADB-to-Fabric.bat` and select the input folder, or drag the folder onto the launcher. Check the console for errors and the actual output path. The HTML report opens automatically.
+There are two ways to run the converter. Both produce the same output.
 
-**Command line:** From the `converter` folder:
+### Option 1: Windows launcher (`.bat` file)
+
+1. Double-click `Convert-ADB-to-Fabric.bat` in the `converter` folder, or drag the input folder onto it.
+2. Select the folder that contains the exported Databricks notebooks.
+3. Check the console for errors and the actual output path. The HTML report opens automatically.
+
+### Option 2: Command line
+
+Open PowerShell, go to the `converter` folder and run the converter with your input folder and an output prefix:
 
 ```powershell
+cd C:\work\toolkit\converter
 python -m adb2fabric "C:\work\databricks-exports" -o "C:\work\converted"
 ```
+
+Replace the paths with your own. If `python` is not available but `py -3 --version` works, use `py -3 -m adb2fabric ...`.
 
 Each run scans the selected folder **recursively** and processes all supported notebooks found there. To rerun only a subset, place that subset in a separate input folder. `-o` is a prefix: the example produces `C:\work\converted_YYYYMMDDHHMM`. Without `-o`, the default is a sibling `<input>_fabric_YYYYMMDDHHMM` folder. Same-minute collisions add `_01`, `_02`, and so on. Every run creates a new folder; existing notebooks and reports are not deleted or overwritten. Use the actual path printed in the console.
 
@@ -166,7 +177,7 @@ Supported handler names and required named groups are validated when the configu
 
 Invalid JSON, duplicate rule IDs, unsupported handler names, missing named groups and malformed regex patterns produce a configuration error. Restart the converter after editing the file because it is loaded at process start.
 
-## Assumptions and troubleshooting
+## Callouts
 
 * `.dbc`, `.ipynb`, `.scala` and `.r` file exports are not supported. The report lists skipped files and conversion errors. Use `--include-plain` only when ordinary source files should also be processed.
 * Auto Loader defaults to an explicit schema and retains checkpoint resets. Optional inference or reset removal can change schema or replay behavior; validate before use.
