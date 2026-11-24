@@ -1,0 +1,9 @@
+{
+  "_note": "Copy this file, edit it, then run:  python -m s2f_publish --config publish.config.json   (command-line options override it). No secrets belong here; use az login, FABRIC_TOKEN or ADO_PAT.",
+  "target": "fabric",
+  "input": "C:\\path\\to\\notebooks_fabric_YYYYMMDDHHMM",
+  "workspace_id": "00000000-0000-0000-0000-000000000000",
+  "on_exists": "skip",
+  "folder": "Synapse Migration\\Notebooks",
+  "dry_run": false
+}

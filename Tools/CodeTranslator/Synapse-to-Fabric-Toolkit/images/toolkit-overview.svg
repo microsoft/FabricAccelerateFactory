@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title description">
+  <title id="title">Synapse to Fabric notebook migration workflow</title>
+  <desc id="description">Converter discovers and converts Synapse notebooks and creates reports; a person reviews output; the publisher sends reviewed notebooks to Fabric or Azure DevOps.</desc>
+  <rect width="1200" height="360" fill="#f3f7fb"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="36" y="46" font-size="25" font-weight="700" fill="#17375e">Synapse to Fabric notebook migration workflow</text>
+    <g fill="#fff" stroke="#bed2e0" stroke-width="2">
+      <rect x="36" y="75" width="350" height="215" rx="14"/>
+      <rect x="425" y="75" width="350" height="215" rx="14"/>
+      <rect x="814" y="75" width="350" height="215" rx="14"/>
+    </g>
+    <g fill="#007c79" font-size="15" font-weight="700">
+      <text x="58" y="108">1  CONVERTER</text>
+      <text x="447" y="108">2  HUMAN REVIEW</text>
+      <text x="836" y="108">3  PUBLISHER</text>
+    </g>
+    <g font-size="20" fill="#17375e">
+      <text x="58" y="149">Discover Synapse notebooks</text>
+      <text x="58" y="183">Convert with configurable rules</text>
+      <text x="58" y="217">Produce notebooks and reports</text>
+      <text x="447" y="149">Review HTML report and code</text>
+      <text x="447" y="183">Resolve findings and dependencies</text>
+      <text x="447" y="217">Test execution and data</text>
+      <text x="836" y="149">Preview the destination</text>
+      <text x="836" y="183">Publish reviewed notebooks to</text>
+      <text x="836" y="217">Fabric or Azure DevOps</text>
+    </g>
+    <g stroke="#007c79" stroke-width="3" fill="none">
+      <path d="M389 181h30m-8-7 8 7-8 7"/>
+      <path d="M778 181h30m-8-7 8 7-8 7"/>
+    </g>
+    <text x="36" y="331" font-size="16" fill="#465d70">Conversion reports are static assessments; validate behavior and outputs before production use.</text>
+  </g>
+</svg>
