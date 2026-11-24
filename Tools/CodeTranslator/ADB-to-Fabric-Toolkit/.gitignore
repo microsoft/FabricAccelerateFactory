@@ -12,3 +12,4 @@ publish.config.json
 *.ipynb
 /converter/samples/
 /converter/tests/
+/publisher/tests/
