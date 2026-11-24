@@ -11,3 +11,5 @@ _report/
 publish.config.json
 *.ipynb
 /converter/samples/synapse_notebooks/
+/converter/tests/
+/publisher/tests/
