@@ -12,6 +12,8 @@ The publisher previews and optionally sends reviewed `.ipynb` notebooks from a c
 
 Never put credentials in the repository or configuration file. Use your organization's approved authentication and access controls.
 
+Azure DevOps PR creation through Azure CLI authentication is unavailable while `ADO_RESOURCE` is `XXXXXXXXXXX`. Use an approved `ADO_PAT` for PR creation, or configure a valid resource ID locally. Fabric authentication and Git Credential Manager authentication are unchanged.
+
 ## Run the publisher
 
 There are two ways to run the publisher. Both preview first and write the same logs and reports.

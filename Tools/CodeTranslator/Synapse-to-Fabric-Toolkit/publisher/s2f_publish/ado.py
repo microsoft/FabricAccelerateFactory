@@ -14,7 +14,7 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-ADO_RESOURCE = "499b84ac-1321-427f-aa17-267ca6975798"   # Azure DevOps Entra application id (az --resource)
+ADO_RESOURCE = "XXXXXXXXXXX"   # Placeholder; Azure CLI authentication requires a valid resource ID.
 
 
 class GitError(Exception):
